@@ -130,7 +130,8 @@ public class HuffmanCoder {
 
     private void generateCodeDict() {
         codeDict = new HashMap<>();
-        generateCodes(root, "");
+        if (root.isLeaf()) codeDict.put(root.getC(), "0");
+        else generateCodes(root, "");
     }
 
     private void generateCodes(HuffmanNode n, String codePart) {
