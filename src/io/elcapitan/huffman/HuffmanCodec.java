@@ -8,22 +8,22 @@ import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.stream.Collectors;
 
-public class HuffmanCoder {
+public class HuffmanCodec {
     private String message;
     private String code;
     private HuffmanNode root;
     private Map<Character, String> codeDict;
     private Map<Character, Double> frequencies;
 
-    public HuffmanCoder() {
+    public HuffmanCodec() {
         this("");
     }
 
-    public HuffmanCoder(String message) {
+    public HuffmanCodec(String message) {
         setMessage(message);
     }
 
-    public HuffmanCoder(File file) throws IOException {
+    public HuffmanCodec(File file) throws IOException {
         setFile(file);
     }
 

@@ -8,7 +8,7 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        HuffmanCoder coder;
+        HuffmanCodec huffmanCodec;
         Scanner input = new Scanner(System.in);
 
         int opCode;
@@ -20,11 +20,11 @@ public class Main {
                     System.out.print("Enter the string to encode: ");
                     String str = input.nextLine();
                     System.out.println("Encoding...");
-                    coder = new HuffmanCoder(str);
-                    printInfo(coder);
+                    huffmanCodec = new HuffmanCodec(str);
+                    printInfo(huffmanCodec);
                     try {
                         System.out.println("Saving...");
-                        coder.saveToFile(new File("output.huff"));
+                        huffmanCodec.saveToFile(new File("output.huff"));
                         System.out.println("Saved!\n");
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -36,10 +36,10 @@ public class Main {
                     File file = new File(path);
                     try {
                         System.out.println("Encoding...");
-                        coder = new HuffmanCoder(file);
-                        printInfo(coder);
+                        huffmanCodec = new HuffmanCodec(file);
+                        printInfo(huffmanCodec);
                         System.out.println("Saving to file...");
-                        coder.saveToFile(new File("output.huff"));
+                        huffmanCodec.saveToFile(new File("output.huff"));
                         System.out.println("Saved!\n");
                     } catch (FileNotFoundException e) {
                         System.out.println("File not found!\n");
@@ -78,12 +78,12 @@ public class Main {
                 "[2] Encode File");
     }
 
-    private static float printCodeTable(HuffmanCoder coder) {
+    private static float printCodeTable(HuffmanCodec huffmanCodec) {
         float avg = 0;
         System.out.println("--- CODE TABLE ---");
-        for (char symbol : coder.getCodeDict().keySet()) {
-            double freq = coder.getFrequency(symbol);
-            String code = coder.getCode(symbol);
+        for (char symbol : huffmanCodec.getCodeDict().keySet()) {
+            double freq = huffmanCodec.getFrequency(symbol);
+            String code = huffmanCodec.getCode(symbol);
             avg += code.length() * freq;
             System.out.printf("[Freq: %.5f] %s => %s\n", freq, symbol == '\n' ? "CR" : symbol, code);
         }
@@ -91,17 +91,17 @@ public class Main {
         return avg;
     }
 
-    private static void printInfo(HuffmanCoder coder) {
-        double avg = printCodeTable(coder);
+    private static void printInfo(HuffmanCodec huffmanCodec) {
+        double avg = printCodeTable(huffmanCodec);
 
-        String message = coder.getMessage();
-        String encoded = coder.getEncoded();
+        String message = huffmanCodec.getMessage();
+        String encoded = huffmanCodec.getEncoded();
         System.out.printf("Message [%d byte(s)]: %s%s\n" +
                         "Encoded [%d byte(s)]: %s%s\n" +
                         "Naive code length: %.3f bit/symbol\n" +
                         "Avg. code length with Huffman encoding: %.3f bit/symbol\n\n",
                 message.length(), message.substring(0, Math.min(75, message.length())), message.length() > 75 ? "..." : "",
                 (int) Math.ceil((double) encoded.length() / 8), encoded.substring(0, Math.min(75, encoded.length())), encoded.length() > 75 ? "..." : "",
-                Math.log10(coder.getCodeDict().size()) / Math.log10(2), avg);
+                Math.log10(huffmanCodec.getCodeDict().size()) / Math.log10(2), avg);
     }
 }

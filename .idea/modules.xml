@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/HuffmanCoder.iml" filepath="$PROJECT_DIR$/HuffmanCoder.iml" />
+      <module fileurl="file://$PROJECT_DIR$/HuffmanCodec.iml" filepath="$PROJECT_DIR$/HuffmanCodec.iml" />
     </modules>
   </component>
 </project>
