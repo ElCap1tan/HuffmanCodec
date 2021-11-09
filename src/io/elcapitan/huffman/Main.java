@@ -3,6 +3,8 @@ package io.elcapitan.huffman;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Scanner;
 
 public class Main {
@@ -20,12 +22,18 @@ public class Main {
                     System.out.print("Enter the string to encode: ");
                     String str = input.nextLine();
                     System.out.println("Encoding...");
-                    huffmanCodec = new HuffmanCodec(str);
-                    printInfo(huffmanCodec);
                     try {
+                        huffmanCodec = new HuffmanCodec(str);
+                        printInfo(huffmanCodec);
                         System.out.println("Saving...");
-                        huffmanCodec.saveToFile(new File("output.huff"));
-                        System.out.println("Saved!\n");
+                        File file = new File("output.huff");
+                        if (!Files.isWritable(Path.of(file.getAbsolutePath().replace(file.getName(), "")))) {
+                            System.out.printf("File not writable to current working directory '%s'. Aborting...\n\n",
+                                    file.getAbsolutePath());
+                            continue;
+                        }
+                        huffmanCodec.saveToFile(file);
+                        System.out.printf("Saved to '%s'!\n\n", file.getAbsolutePath());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -39,8 +47,22 @@ public class Main {
                         huffmanCodec = new HuffmanCodec(file);
                         printInfo(huffmanCodec);
                         System.out.println("Saving to file...");
-                        huffmanCodec.saveToFile(new File("output.huff"));
-                        System.out.println("Saved!\n");
+                        String filePath = file.getAbsolutePath().replace(file.getName(), "");
+                        if (Files.isWritable(Path.of(filePath))) {
+                            filePath += file.getName() + ".huff";
+                        }
+                        else {
+                            System.out.printf("File not writable to '%s'. " +
+                                    "Trying to save to current working directory '%s'.\n",
+                                    filePath, System.getProperty("user.dir"));
+                            filePath = file.getName() + ".huff";
+                            if (!Files.isWritable(Path.of(filePath))) {
+                                System.out.println("File not writable to current working directory. Aborting...\n\n");
+                                continue;
+                            }
+                        }
+                        huffmanCodec.saveToFile(new File(filePath));
+                        System.out.printf("Saved to %s!\n\n", filePath);
                     } catch (FileNotFoundException e) {
                         System.out.println("File not found!\n");
                     } catch (IOException e) {
