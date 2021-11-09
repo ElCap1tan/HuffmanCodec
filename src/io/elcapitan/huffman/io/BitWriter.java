@@ -31,7 +31,7 @@ public class BitWriter implements Closeable, Flushable {
 
     public void writeBits(long bits, int numBits) throws IOException {
         for (int i = 0; i < numBits; i++) {
-            writeBit((bits & (1L << i)) != 0);
+            writeBit((bits >> i & 1) != 0);
         }
     }
 

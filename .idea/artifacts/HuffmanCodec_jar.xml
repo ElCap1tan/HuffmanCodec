@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
   <artifact type="jar" name="HuffmanCodec:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/HuffmanCodec_jar</output-path>
-    <root id="archive" name="HuffmanCoder.jar">
+    <root id="archive" name="HuffmanCodec.jar">
       <element id="module-output" name="HuffmanCodec" />
     </root>
   </artifact>
