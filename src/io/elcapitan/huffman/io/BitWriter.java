@@ -2,12 +2,14 @@ package io.elcapitan.huffman.io;
 
 import java.io.*;
 
-public class BitWriter {
+public class BitWriter implements Closeable, Flushable {
     OutputStream out;
     private byte buffer;
     private int currentBit;
 
-    public BitWriter(OutputStream out) {
+    public BitWriter(OutputStream out) throws NullPointerException {
+        if (out == null) throw new NullPointerException("OutputStream cannot be null");
+
         this.out = out;
         this.buffer = 0;
         this.currentBit = 0;
@@ -27,9 +29,9 @@ public class BitWriter {
         }
     }
 
-    public void writeBits(int bits, int numBits) throws IOException {
+    public void writeBits(long bits, int numBits) throws IOException {
         for (int i = 0; i < numBits; i++) {
-            writeBit((bits & (1 << i)) != 0);
+            writeBit((bits & (1L << i)) != 0);
         }
     }
 
@@ -38,6 +40,38 @@ public class BitWriter {
             out.write(nextByte);
         else
             writeBits(nextByte, 8);
+    }
+
+    public void writeBytes(byte[] bytes) throws IOException {
+        for (byte b : bytes)
+            writeByte(b);
+    }
+
+    public void writeShort(short nextShort) throws IOException {
+        writeBits(nextShort, 16);
+    }
+
+    public void writeInt(int nextInt) throws IOException {
+        writeBits(nextInt, 32);
+    }
+
+    public void writeLong(long nextLong) throws IOException {
+        writeBits(nextLong, 64);
+    }
+
+    public void writeFloat(float nextFloat) throws IOException {
+        writeInt(Float.floatToIntBits(nextFloat));
+    }
+
+    public void writeDouble(double nextDouble) throws IOException {
+        writeLong(Double.doubleToLongBits(nextDouble));
+    }
+
+    public void writeString(String nextString) throws IOException {
+        if (nextString == null) throw new NullPointerException("String cannot be null");
+
+        for (char c : nextString.toCharArray())
+            writeByte((byte) c);
     }
 
     public void flush() throws IOException {

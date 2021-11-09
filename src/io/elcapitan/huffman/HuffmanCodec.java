@@ -19,7 +19,7 @@ public class HuffmanCodec {
         this("");
     }
 
-    public HuffmanCodec(String message) {
+    public HuffmanCodec(String message) throws NullPointerException {
         setMessage(message);
     }
 
@@ -28,10 +28,14 @@ public class HuffmanCodec {
     }
 
     public void setFile(File file) throws IOException {
+        if (file == null) throw new NullPointerException("File cannot be null");
+
         setMessage(readFile(file));
     }
 
     public void saveToFile(File file) throws IOException {
+        if (file == null) throw new NullPointerException("File cannot be null");
+
         BitWriter writer = new BitWriter(file);
         writeTree(writer);
         writeDiscardBits(writer);
@@ -55,7 +59,9 @@ public class HuffmanCodec {
         return message;
     }
 
-    public void setMessage(String message) {
+    public void setMessage(String message) throws NullPointerException {
+        if (message == null) throw new NullPointerException("Message cannot be null");
+
         this.message = message;
         generate();
     }
@@ -69,7 +75,8 @@ public class HuffmanCodec {
     }
 
     private void writeNode(HuffmanNode n, BitWriter writer) throws IOException {
-        if (n == null) return;
+        assert n != null && writer != null;
+
         if (n.isLeaf()) {
             writer.writeBit(true);
             writer.writeByte((byte) n.getC());
@@ -81,10 +88,14 @@ public class HuffmanCodec {
     }
 
     private void writeDiscardBits(BitWriter writer) throws IOException {
+        assert writer != null;
+
         writer.writeBits(code.length() % 8, 3);
     }
 
     private void writeMessage(BitWriter writer) throws IOException {
+        assert writer != null;
+
         for (char b : code.toCharArray()) {
             writer.writeBit(b == '1');
         }
@@ -116,14 +127,19 @@ public class HuffmanCodec {
         return (double) count / message.length();
     }
 
-    private void generateTree() {
+    private void generateTree() throws NullPointerException{
         PriorityQueue<HuffmanNode> pq = new PriorityQueue<>();
         for (char letter : frequencies.keySet()) {
             pq.add(new HuffmanNode(getFrequency(letter), letter));
         }
 
         while (pq.size() > 1) {
-            pq.add(new HuffmanNode(pq.poll(), pq.poll()));
+            HuffmanNode left = pq.poll();
+            HuffmanNode right = pq.poll();
+
+            assert left != null && right != null;
+
+            pq.add(new HuffmanNode(left, right));
         }
         root = pq.poll();
     }
@@ -135,7 +151,8 @@ public class HuffmanCodec {
     }
 
     private void generateCodes(HuffmanNode n, String codePart) {
-        if (n == null) return;
+        assert n != null && codePart != null;
+
         if (n.isLeaf()) {
             codeDict.put(n.getC(), codePart);
             return;
@@ -153,6 +170,8 @@ public class HuffmanCodec {
     }
 
     private String readFile(File file) throws IOException {
+        assert file != null;
+
         StringBuilder builder = new StringBuilder();
         char[] buffer = new char[1024];
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
