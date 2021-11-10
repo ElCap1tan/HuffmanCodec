@@ -1,5 +1,6 @@
 package io.elcapitan.huffman;
 
+import io.elcapitan.huffman.io.BitReader;
 import io.elcapitan.huffman.io.BitWriter;
 
 import java.io.*;
@@ -20,27 +21,114 @@ public class HuffmanCodec {
     }
 
     public HuffmanCodec(String message) throws NullPointerException {
-        setMessage(message);
+        encode(message);
+    }
+
+    public HuffmanCodec(InputStream in) throws NullPointerException {
+        encode(in);
     }
 
     public HuffmanCodec(File file) throws IOException {
-        setFile(file);
+        encode(file);
     }
 
-    public void setFile(File file) throws IOException {
+    public void encode(String message) throws NullPointerException {
+        if (message == null) throw new NullPointerException("Message cannot be null");
+
+        this.message = message;
+        generate();
+    }
+
+    public void encode(InputStream in) throws NullPointerException {
+        if (in == null) throw new NullPointerException("InputStream cannot be null");
+
+        encode(new BufferedReader(new InputStreamReader(in)).lines().collect(Collectors.joining("\n")));
+    }
+
+    public void encode(File file) throws IOException {
         if (file == null) throw new NullPointerException("File cannot be null");
 
-        setMessage(readFile(file));
+        encode(new FileInputStream(file));
     }
 
     public void saveToFile(File file) throws IOException {
         if (file == null) throw new NullPointerException("File cannot be null");
 
         BitWriter writer = new BitWriter(file);
-        writeTree(writer);
-        writeDiscardBits(writer);
+        int bitsWritten = writeTree(writer);
+        writeDiscardBits(bitsWritten, writer);
         writeMessage(writer);
         writer.close();
+    }
+
+    public void decode(File file) throws IOException {
+        if (file == null) throw new NullPointerException("File cannot be null");
+
+        decode(new FileInputStream(file));
+    }
+
+    public void decode(InputStream in) throws IOException {
+        if (in == null) throw new NullPointerException("InputStream cannot be null");
+
+        BitReader reader = new BitReader(in);
+        decodeTree(reader);
+        generateCodeDict();
+        readCode(reader);
+        decodeMessage();
+        generateFrequencies();
+    }
+
+    public void decode(String code, Map<Character, String> dictionary) {
+        if (code == null) throw new NullPointerException("Code cannot be null");
+        if (dictionary == null) throw new NullPointerException("Dictionary cannot be null");
+
+        this.code = code;
+        codeDict = dictionary;
+        decodeMessage();
+        generateFrequencies();
+    }
+
+    private void decodeTree(BitReader reader) throws IOException {
+        frequencies = new HashMap<>();
+        root = decodeNode(reader);
+    }
+
+    private HuffmanNode decodeNode(BitReader reader) throws IOException {
+        if (reader.readBit()) {
+            return new HuffmanNode(0f, reader.readChar());
+        } else {
+            return new HuffmanNode(decodeNode(reader), decodeNode(reader));
+        }
+    }
+
+    private void decodeMessage() {
+        StringBuilder messageBuilder = new StringBuilder();
+        for (int start = 0; start < code.length();) {
+            for (int end = start + 1; end <= code.length(); end++) {
+                String subCode = code.substring(start, end);
+                if (codeDict.containsValue(subCode)) {
+                    messageBuilder.append(codeDict.entrySet().stream()
+                            .filter(entry -> entry.getValue().equals(subCode))
+                            .findFirst()
+                            .get()
+                            .getKey());
+                    start = end;
+                } else if (end == code.length()) {
+                    start++;
+                }
+            }
+        }
+        message = messageBuilder.toString();
+    }
+
+    private void readCode(BitReader reader) throws IOException {
+        byte discardBits = (byte) reader.readBits(3);
+
+        StringBuilder codeBuilder = new StringBuilder();
+        while (reader.hasNext()) {
+            codeBuilder.append(reader.readBit() ? "1" : "0");
+        }
+        code = codeBuilder.delete(codeBuilder.length() - (discardBits - 1), codeBuilder.length()).toString();
     }
 
     public double getFrequency(char c) {
@@ -59,38 +147,33 @@ public class HuffmanCodec {
         return message;
     }
 
-    public void setMessage(String message) throws NullPointerException {
-        if (message == null) throw new NullPointerException("Message cannot be null");
-
-        this.message = message;
-        generate();
-    }
-
     public String getEncoded() {
         return code;
     }
 
-    private void writeTree(BitWriter writer) throws IOException {
-        writeNode(root, writer);
+    private int writeTree(BitWriter writer) throws IOException {
+        return writeNode(root, writer);
     }
 
-    private void writeNode(HuffmanNode n, BitWriter writer) throws IOException {
+    private int writeNode(HuffmanNode n, BitWriter writer) throws IOException {
         assert n != null && writer != null;
 
         if (n.isLeaf()) {
             writer.writeBit(true);
             writer.writeByte((byte) n.getC());
+            return 9;
         } else {
+            int bits = 1;
             writer.writeBit(false);
-            writeNode(n.getLeft(), writer);
-            writeNode(n.getRight(), writer);
+            bits += writeNode(n.getLeft(), writer);
+            bits += writeNode(n.getRight(), writer);
+            return bits;
         }
     }
 
-    private void writeDiscardBits(BitWriter writer) throws IOException {
+    private void writeDiscardBits(int bitsAlreadyWritten, BitWriter writer) throws IOException {
         assert writer != null;
-
-        writer.writeBits(code.length() % 8, 3);
+        writer.writeBits((code.length() + bitsAlreadyWritten) % 8, 3);
     }
 
     private void writeMessage(BitWriter writer) throws IOException {
@@ -169,20 +252,5 @@ public class HuffmanCodec {
             builder.append(codeDict.get(c));
         }
         code = builder.toString();
-    }
-
-    private String readFile(File file) throws IOException {
-        assert file != null;
-
-        StringBuilder builder = new StringBuilder();
-        char[] buffer = new char[1024];
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
-        int c = reader.read(buffer);
-        while (c > 0) {
-            builder.append(buffer, 0, c);
-            c = reader.read(buffer);
-        }
-        reader.close();
-        return builder.toString();
     }
 }

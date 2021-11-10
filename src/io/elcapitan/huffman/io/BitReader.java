@@ -3,12 +3,16 @@ package io.elcapitan.huffman.io;
 import java.io.*;
 
 public class BitReader implements Closeable {
-    InputStream in;
-    byte buffer;
-    byte currentBit;
+    private final InputStream in;
+    private byte buffer;
+    private byte currentBit;
+    private boolean closed;
+    private boolean eof;
 
     public BitReader(InputStream in) {
         this.in = new BufferedInputStream(in);
+        closed = false;
+        eof = false;
     }
 
     public BitReader(File file) throws IOException {
@@ -16,6 +20,9 @@ public class BitReader implements Closeable {
     }
 
     public boolean readBit() throws IOException {
+        if (closed) {
+            throw new IOException("BitReader is closed.");
+        }
         if (currentBit == 0) {
             fillBuffer();
         }
@@ -34,6 +41,27 @@ public class BitReader implements Closeable {
         return (int) readBits(32);
     }
 
+    public long readLong() throws IOException {
+        return readBits(64);
+    }
+
+    public float readFloat() throws IOException {
+        return Float.intBitsToFloat(readInt());
+    }
+
+    public double readDouble() throws IOException {
+        return Double.longBitsToDouble(readLong());
+    }
+
+    public String readString() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        char c;
+        while ((c = readChar()) != '\0') {
+            sb.append(c);
+        }
+        return sb.toString();
+    }
+
     public long readBits(int numBits) throws IOException {
         long result = 0;
         for (int i = 0; i < numBits; i++) {
@@ -43,17 +71,33 @@ public class BitReader implements Closeable {
         return result;
     }
 
-    public int available() throws IOException {
-        return in.available();
+    public boolean isClosed() {
+        return closed;
+    }
+
+    public boolean hasNext() throws IOException {
+        if (closed) {
+            throw new IOException("BitReader is closed.");
+        }
+        if (currentBit == 0) {
+            fillBuffer();
+        }
+        return !eof;
     }
 
     public void close() throws IOException {
         in.close();
+        closed = true;
     }
 
     private void fillBuffer() throws IOException {
-        if (available() == 0) return;
+        if (eof) {
+            throw new EOFException();
+        }
         buffer = (byte) in.read();
+        if (buffer == -1) {
+            eof = true;
+        }
         currentBit = 8;
     }
 }

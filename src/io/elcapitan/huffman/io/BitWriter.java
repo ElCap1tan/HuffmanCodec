@@ -70,8 +70,8 @@ public class BitWriter implements Closeable, Flushable {
     public void writeString(String nextString) throws IOException {
         if (nextString == null) throw new NullPointerException("String cannot be null");
 
-        for (char c : nextString.toCharArray())
-            writeByte((byte) c);
+        for (char c : nextString.toCharArray()) writeByte((byte) c);
+        writeByte((byte) '\0');
     }
 
     public void flush() throws IOException {
