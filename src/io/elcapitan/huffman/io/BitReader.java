@@ -79,6 +79,9 @@ public class BitReader implements Closeable {
         if (closed) {
             throw new IOException("BitReader is closed.");
         }
+        if (eof) {
+            return false;
+        }
         if (currentBit == 0) {
             fillBuffer();
         }
@@ -94,9 +97,13 @@ public class BitReader implements Closeable {
         if (eof) {
             throw new EOFException();
         }
-        buffer = (byte) in.read();
-        if (buffer == -1) {
+        int read = in.read();
+        if (read == -1) {
             eof = true;
+            buffer = 0;
+        }
+        else {
+            buffer = (byte) read;
         }
         currentBit = 8;
     }

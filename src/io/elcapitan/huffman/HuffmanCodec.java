@@ -76,6 +76,7 @@ public class HuffmanCodec {
         readCode(reader);
         decodeMessage();
         generateFrequencies();
+        reader.close();
     }
 
     public void decode(String code, Map<Character, String> dictionary) {
@@ -128,7 +129,7 @@ public class HuffmanCodec {
         while (reader.hasNext()) {
             codeBuilder.append(reader.readBit() ? "1" : "0");
         }
-        code = codeBuilder.delete(codeBuilder.length() - (discardBits - 1), codeBuilder.length()).toString();
+        code = codeBuilder.substring(0, codeBuilder.length() - discardBits);
     }
 
     public double getFrequency(char c) {
@@ -160,7 +161,7 @@ public class HuffmanCodec {
 
         if (n.isLeaf()) {
             writer.writeBit(true);
-            writer.writeByte((byte) n.getC());
+            writer.writeByte((byte) n.getChar());
             return 9;
         } else {
             int bits = 1;
@@ -173,7 +174,7 @@ public class HuffmanCodec {
 
     private void writeDiscardBits(int bitsAlreadyWritten, BitWriter writer) throws IOException {
         assert writer != null;
-        writer.writeBits((code.length() + bitsAlreadyWritten) % 8, 3);
+        writer.writeBits(8 - ((bitsAlreadyWritten + code.length() + 3) % 8), 3);
     }
 
     private void writeMessage(BitWriter writer) throws IOException {
@@ -230,7 +231,7 @@ public class HuffmanCodec {
     private void generateCodeDict() {
         codeDict = new HashMap<>();
         if (root != null) {
-            if (root.isLeaf()) codeDict.put(root.getC(), "0");
+            if (root.isLeaf()) codeDict.put(root.getChar(), "0");
             else generateCodes(root, "");
         }
     }
@@ -239,7 +240,7 @@ public class HuffmanCodec {
         assert n != null && codePart != null;
 
         if (n.isLeaf()) {
-            codeDict.put(n.getC(), codePart);
+            codeDict.put(n.getChar(), codePart);
             return;
         }
         generateCodes(n.getLeft(), codePart + "0");

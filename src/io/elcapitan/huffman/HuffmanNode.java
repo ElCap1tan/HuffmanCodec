@@ -38,7 +38,7 @@ public class HuffmanNode implements Comparable<HuffmanNode> {
         return right;
     }
 
-    public char getC() {
+    public char getChar() {
         return c;
     }
 }

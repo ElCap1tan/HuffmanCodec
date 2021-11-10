@@ -3,7 +3,7 @@ package io.elcapitan.huffman.io;
 import java.io.*;
 
 public class BitWriter implements Closeable, Flushable {
-    OutputStream out;
+    private final OutputStream out;
     private byte buffer;
     private int currentBit;
 
@@ -36,10 +36,7 @@ public class BitWriter implements Closeable, Flushable {
     }
 
     public void writeByte(byte nextByte) throws IOException {
-        if (currentBit == 0)
-            out.write(nextByte);
-        else
-            writeBits(nextByte, 8);
+        writeBits(nextByte, 8);
     }
 
     public void writeBytes(byte[] bytes) throws IOException {
